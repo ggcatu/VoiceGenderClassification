@@ -12,6 +12,8 @@ library(mice)
 library(xgboost)
 library(e1071)
 
+setwd("C:\\Users\\Gabriel\\Desktop\\VoiceGenderClassification")
+
 specan3 <- function(X, bp = c(0,22), wl = 2048, threshold = 5, parallel = 1){
   # To use parallel processing: library(devtools), install_github('nathanvan/parallelsugar')
   if(class(X) == "data.frame") {if(all(c("sound.files", "selec", 
