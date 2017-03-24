@@ -1,0 +1,11 @@
+Para el script de python:
+
+Instalar pyaudio
+Instalar wave
+
+Correr
+
+Para el script de R:
+
+R < script.txt --no-save
+
