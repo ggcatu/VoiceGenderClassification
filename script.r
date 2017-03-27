@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 packages <- c('tuneR', 'seewave', 'fftw', 'caTools', 'randomForest', 'warbleR', 'mice', 'e1071', 'rpart', 'xgboost', 'e1071')
 if (length(setdiff(packages, rownames(installed.packages()))) > 0) {
   install.packages(setdiff(packages, rownames(installed.packages())))  
@@ -12,7 +14,7 @@ library(mice)
 library(xgboost)
 library(e1071)
 
-setwd("C:\\Users\\Gabriel\\Desktop\\VoiceGenderClassification")
+setwd("/home/eliot/Documentos/Trimestre XI/Inteligencia Artificial II/VoiceGenderClassification")
 
 specan3 <- function(X, bp = c(0,22), wl = 2048, threshold = 5, parallel = 1){
   # To use parallel processing: library(devtools), install_github('nathanvan/parallelsugar')
@@ -144,80 +146,39 @@ specan3 <- function(X, bp = c(0,22), wl = 2048, threshold = 5, parallel = 1){
   return(x)
 }
 
-processFolder <- function(folderName) {
+processFile <- function(fileName) {
   # Start with empty data.frame.
   data <- data.frame()
   
-  # Get list of files in the folder.
-  list <- list.files(folderName, '\\.wav')
-  
-  # Add file list to data.frame for processing.
-  for (fileName in list) {
-    row <- data.frame(fileName, 0, 0, 20)
-    data <- rbind(data, row)
-  }
+  row <- data.frame(fileName, 0, 0, 20)
+  data <- rbind(data, row)
   
   # Set column names.
   names(data) <- c('sound.files', 'selec', 'start', 'end')
   
-  # Move into folder for processing.
-  setwd(folderName)
-  
-  # Process files.
+  # Process files.Rs
   acoustics <- specan3(data, parallel=1)
-  
-  # Move back into parent folder.
-  setwd('..')
   
   acoustics
 }
 
-gender <- function(filePath) {
-  if (!exists('genderBoosted')) {
-    load('model.bin')
-  }
-  
-  # Setup paths.
-  currentPath <- getwd()
-  fileName <- basename(filePath)
-  path <- dirname(filePath)
-  
-  # Set directory to read file.
-  setwd(path)
-  
-  # Start with empty data.frame.
-  data <- data.frame(fileName, 0, 0, 20)
-  
-  # Set column names.
-  names(data) <- c('sound.files', 'selec', 'start', 'end')
-  
-  # Process files.
-  acoustics <- specan3(data, parallel=1)
-  
-  # Restore path.
-  setwd(currentPath)
-  
-  predict(genderCombo, newdata=acoustics)
-}
+# Passing file name by command line.
+args = commandArgs(trailingOnly=TRUE)
+fileName = args[1]
+inputFileName = paste(fileName,".wav", sep="")
 
 # Load data
-males <- processFolder('male')
-females <- processFolder('female')
-
-# Set labels.
-males$label <- 1
-females$label <- 2
-data <- rbind(males, females)
-data$label <- factor(data$label, labels=c('male', 'female'))
+dataVoice <- processFile(inputFileName)
 
 # Remove unused columns.
-data$duration <- NULL
-data$sound.files <- NULL
-data$selec <- NULL
-data$peakf <- NULL
+dataVoice$duration <- NULL
+dataVoice$sound.files <- NULL
+dataVoice$selec <- NULL
+dataVoice$peakf <- NULL
 
 # Remove rows containing NA's.
-data <- data[complete.cases(data),]
+dataVoice <- dataVoice[complete.cases(dataVoice),]
 
 # Write out csv dataset.
-write.csv(data, file='voice.csv', sep=',', row.names=F)
+outFileName = paste(fileName,".csv", sep="")
+write.csv(dataVoice, file=outFileName, sep=',', row.names=F)

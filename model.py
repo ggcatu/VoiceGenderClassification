@@ -1,15 +1,13 @@
-from grabacion import grabar
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
+from sklearn.externals import joblib
 import numpy as np
 import subprocess
 import pandas as pd
 import os
 
-##grabar(5,"hola")
 def leer_archivo(nombre):
     df = pd.read_csv(nombre)
     Y = df["label"]
@@ -17,18 +15,9 @@ def leer_archivo(nombre):
     X = df.ix[:,:-1]
     return X, Yfact
 
-def procesar_audios():
-    # Genera voice.csv
-    proc = subprocess.Popen(['RScript','script.r'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = proc.communicate()
-
-
 X,y = leer_archivo("Entrenamiento/voice.csv")
-#print(len(X))
-#kf = KFold(n_splits = 5)
-#print(kf)
-#print(kf.get_n_splits(X))
 n_splits = 5
+
 '''
 forest2 = RandomForestClassifier(n_estimators=30, criterion='entropy', max_depth=None, 
 								min_samples_split=2, min_samples_leaf=1, 
@@ -96,6 +85,7 @@ print(np.mean(score))
 print("")
 forest.fit(X,y)
 importantFeatures = list(forest.feature_importances_)
+joblib.dump(forest, 'random_forest_train.pkl')
 mlp = MLPClassifier(hidden_layer_sizes=(100,100,100), activation='logistic', solver='adam', 
 					alpha=0.0001, batch_size='auto', learning_rate='constant', 
 					learning_rate_init=0.01, power_t=0.5, max_iter=400, shuffle=True, 
@@ -118,7 +108,7 @@ print ("Precision media: "),
 print(np.mean(score))
 print("")
 while (len(importantFeatures) != 1): 
-	minImportance = 10000000000
+	minImportance = 2
 	minIndex = -1
 	for i in range(0,len(importantFeatures)):
 		if (importantFeatures[i] < minImportance):
